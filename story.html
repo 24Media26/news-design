@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>قالب ستوري أخبار 24</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#eef1f5;color:#172334;font-family:Tahoma,Arial,sans-serif}
+main{max-width:1100px;margin:22px auto;padding:16px;display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:22px;align-items:start}
+.panel{background:#fff;padding:18px;border-radius:14px;box-shadow:0 4px 20px #17233412}
+h1{font-size:21px;margin:0 0 8px}p{font-size:13px;line-height:1.7;color:#526174;margin:0 0 16px}
+label{display:block;font-size:14px;font-weight:bold;margin:14px 0 6px}
+input[type=text],textarea{width:100%;border:1px solid #cbd3dd;border-radius:8px;padding:10px;font:inherit;font-size:14px}
+textarea{height:120px;resize:vertical;line-height:1.6}input[type=file]{width:100%;font-size:13px}
+button{border:0;border-radius:9px;padding:12px 14px;font:inherit;font-weight:bold;cursor:pointer;margin-top:14px;width:100%;background:#087f9c;color:white}
+button.secondary{background:#e8edf2;color:#243447}.preview{display:flex;justify-content:center}
+canvas{width:min(100%,440px);height:auto;background:#19263b;box-shadow:0 8px 30px #17233424}
+.hint{font-size:12px;color:#6b7787;margin-top:10px}
+@media(max-width:760px){main{grid-template-columns:1fr;margin:8px auto}.preview{grid-row:1}}
+</style></head>
+<body><main>
+<section class="panel">
+<h1>قالب ستوري أخبار 24</h1>
+<p>ارفعي صورة الخبر، اكتبي العنوان، وحددي العبارة التي تريدين تلوينها بالفيروزي، ثم نزّلي التصميم بصيغة PNG بمقاس 1080 × 1920.</p>
+<label for="photo">صورة الخبر</label><input id="photo" type="file" accept="image/*">
+<label for="headline">العنوان</label><textarea id="headline">عنوان الخبر يظهر هنا بطريقة واضحة ومناسبة للستوري</textarea>
+<label for="highlight">الكلمة أو العبارة المميزة بالفيروزي</label><input id="highlight" type="text" value="واضحة">
+<label for="footer">النص أسفل التصميم</label><input id="footer" type="text" value="24.ae">
+<button id="download">تنزيل تصميم الستوري PNG</button>
+<button id="reset" class="secondary">إعادة النص الافتراضي</button>
+<div class="hint">مقاس الستوري: 1080 × 1920 بكسل (9:16). هذا قالب تجريبي قابل للتعديل.</div>
+</section><section class="preview"><canvas id="art" width="1080" height="1920" aria-label="معاينة تصميم الستوري"></canvas></section>
+</main>
+<script>
+const canvas=document.getElementById('art'),ctx=canvas.getContext('2d');
+const photoInput=document.getElementById('photo'),headlineInput=document.getElementById('headline'),highlightInput=document.getElementById('highlight'),footerInput=document.getElementById('footer');
+let photo=null;
+photoInput.addEventListener('change',e=>{const f=e.target.files&&e.target.files[0];if(!f)return;const url=URL.createObjectURL(f),im=new Image();im.onload=()=>{photo=im;draw();URL.revokeObjectURL(url)};im.src=url});
+[headlineInput,highlightInput,footerInput].forEach(el=>el.addEventListener('input',draw));
+function draw(){
+ const W=1080,H=1920;ctx.clearRect(0,0,W,H);ctx.fillStyle='#19263b';ctx.fillRect(0,0,W,H);
+ const photoH=1120;
+ if(photo){const s=Math.max(W/photo.width,photoH/photo.height),sw=photo.width*s,sh=photo.height*s;ctx.drawImage(photo,(W-sw)/2,(photoH-sh)/2,sw,sh)}
+ else{const g=ctx.createLinearGradient(0,0,W,photoH);g.addColorStop(0,'#b7a9a1');g.addColorStop(.5,'#606a77');g.addColorStop(1,'#29374a');ctx.fillStyle=g;ctx.fillRect(0,0,W,photoH);ctx.fillStyle='#ffffff20';ctx.beginPath();ctx.arc(260,300,210,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(820,580,260,0,Math.PI*2);ctx.fill()}
+ const grad=ctx.createLinearGradient(0,700,0,1300);grad.addColorStop(0,'rgba(25,38,59,0)');grad.addColorStop(.45,'rgba(25,38,59,.8)');grad.addColorStop(1,'#19263b');ctx.fillStyle=grad;ctx.fillRect(0,650,W,650);
+ const bg=ctx.createLinearGradient(0,1080,0,H);bg.addColorStop(0,'#19263b');bg.addColorStop(1,'#111d31');ctx.fillStyle=bg;ctx.fillRect(0,1080,W,840);
+ // 24 logo approximation
+ ctx.strokeStyle='#ffffffc7';ctx.lineWidth=12;ctx.beginPath();ctx.arc(110,110,54,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 46px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('24',112,111);
+ // Wave motif lower-left
+ ctx.save();ctx.globalAlpha=.38;ctx.strokeStyle='#087d9d';ctx.lineWidth=2;
+ for(let j=0;j<25;j++){ctx.beginPath();for(let x=0;x<=590;x+=5){const y=1600+j*8+Math.sin(x/48+j*.2)*38+Math.sin(x/100)*25;if(!x)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.stroke()}
+ ctx.restore();
+ // headline wrapping
+ const text=headlineInput.value.trim()||'اكتبي عنوان الخبر هنا',hi=highlightInput.value.trim(),fontSize=66,lineHeight=98,maxWidth=900;
+ ctx.font=`bold ${fontSize}px Tahoma, Arial, sans-serif`;const words=text.split(/\s+/);let lines=[],line='';
+ for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);if(lines.length>5)lines=lines.slice(0,5);
+ const startY=1250+(5-lines.length)*38;
+ lines.forEach((ln,i)=>{let segs=[];if(hi&&ln.includes(hi)){const parts=ln.split(hi);for(let k=0;k<parts.length;k++){if(parts[k])segs.push({t:parts[k],c:'#fff'});if(k<parts.length-1)segs.push({t:hi,c:'#67e0eb'})}}else segs=[{t:ln,c:'#fff'}];let x=1000,y=startY+i*lineHeight;ctx.font=`bold ${fontSize}px Tahoma, Arial, sans-serif`;ctx.textAlign='right';ctx.textBaseline='alphabetic';for(const seg of segs){ctx.fillStyle=seg.c;ctx.fillText(seg.t,x,y);x-=ctx.measureText(seg.t).width}});
+ ctx.fillStyle='#fff';ctx.font='bold 30px Tahoma, Arial, sans-serif';ctx.textAlign='right';ctx.fillText(footerInput.value||'24.ae',1000,1860);
+}
+document.getElementById('download').addEventListener('click',()=>{const a=document.createElement('a');a.download='story-card.png';a.href=canvas.toDataURL('image/png');a.click()});
+document.getElementById('reset').addEventListener('click',()=>{headlineInput.value='عنوان الخبر يظهر هنا بطريقة واضحة ومناسبة للستوري';highlightInput.value='واضحة';footerInput.value='24.ae';photoInput.value='';photo=null;draw()});
+draw();
+</script></body></html>
