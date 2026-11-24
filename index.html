@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>قالب أخبار 24</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#eef1f5;color:#172334;font-family:Tahoma,Arial,sans-serif}
+  main{max-width:1050px;margin:24px auto;padding:18px;display:grid;grid-template-columns:minmax(280px,360px) 1fr;gap:22px;align-items:start}
+  .panel{background:#fff;padding:18px;border-radius:14px;box-shadow:0 4px 20px #17233412}
+  h1{font-size:21px;margin:0 0 8px}
+  p{font-size:13px;line-height:1.7;color:#526174;margin:0 0 16px}
+  label{display:block;font-size:14px;font-weight:bold;margin:14px 0 6px}
+  input[type=text],textarea{width:100%;border:1px solid #cbd3dd;border-radius:8px;padding:10px;font:inherit;font-size:14px}
+  textarea{height:105px;resize:vertical;line-height:1.6}
+  input[type=file]{width:100%;font-size:13px}
+  button{border:0;border-radius:9px;padding:12px 14px;font:inherit;font-weight:bold;cursor:pointer;margin-top:14px;width:100%;background:#087f9c;color:white}
+  button.secondary{background:#e8edf2;color:#243447}
+  .preview{display:flex;justify-content:center}
+  canvas{width:min(100%,540px);height:auto;background:#18263a;box-shadow:0 8px 30px #17233424}
+  .hint{font-size:12px;color:#6b7787;margin-top:10px}
+  @media(max-width:760px){main{grid-template-columns:1fr;margin:8px auto}.preview{grid-row:1}}
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <h1>قالب أخبار 24</h1>
+    <p>ارفعي صورة الخبر، اكتبي العنوان، وحددي الكلمة التي تريدين تلوينها بالفيروزي، ثم نزّلي التصميم بصيغة PNG. القالب تجريبي ويمكنك تعديل الألوان والنصوص حسب هوية العمل المعتمدة.</p>
+    <label for="photo">صورة الخبر</label>
+    <input id="photo" type="file" accept="image/*">
+    <label for="headline">العنوان</label>
+    <textarea id="headline">إنفيديا تعيد جنس هواة إلى قيادتها بدعم من ترامب</textarea>
+    <label for="highlight">الكلمة أو العبارة المميزة بالفيروزي</label>
+    <input id="highlight" type="text" value="بدعم">
+    <label for="footer">النص أسفل اليمين</label>
+    <input id="footer" type="text" value="24.ae">
+    <button id="download">تنزيل التصميم PNG</button>
+    <button id="reset" class="secondary">إعادة النص الافتراضي</button>
+    <div class="hint">المقاس: 1080 × 1350 بكسل (4:5). الأفضل استخدام صورة أفقية عالية الجودة.</div>
+  </section>
+  <section class="preview"><canvas id="art" width="1080" height="1350" aria-label="معاينة التصميم"></canvas></section>
+</main>
+<script>
+const canvas=document.getElementById('art'), ctx=canvas.getContext('2d');
+const photoInput=document.getElementById('photo');
+const headlineInput=document.getElementById('headline');
+const highlightInput=document.getElementById('highlight');
+const footerInput=document.getElementById('footer');
+let photo=null;
+photoInput.addEventListener('change',e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f)return;
+  const url=URL.createObjectURL(f), im=new Image();
+  im.onload=()=>{photo=im;draw();URL.revokeObjectURL(url)};
+  im.src=url;
+});
+[headlineInput,highlightInput,footerInput].forEach(el=>el.addEventListener('input',draw));
+function roundRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function draw(){
+  const W=1080,H=1350;
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#19263b';ctx.fillRect(0,0,W,H);
+  // Photo area
+  if(photo){
+    const boxH=850, scale=Math.max(W/photo.width,boxH/photo.height);
+    const sw=photo.width*scale, sh=photo.height*scale;
+    ctx.drawImage(photo,(W-sw)/2,(boxH-sh)/2,sw,sh);
+  } else {
+    const g=ctx.createLinearGradient(0,0,W,850);
+    g.addColorStop(0,'#b7a9a1');g.addColorStop(.48,'#606a77');g.addColorStop(1,'#29374a');
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,850);
+    ctx.fillStyle='#ffffff24';ctx.beginPath();ctx.arc(250,250,180,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ffffff15';ctx.beginPath();ctx.arc(790,330,230,0,Math.PI*2);ctx.fill();
+  }
+  // Dark gradient overlay blending photo into background
+  const grad=ctx.createLinearGradient(0,470,0,1000);
+  grad.addColorStop(0,'rgba(25,38,59,0)');
+  grad.addColorStop(.35,'rgba(25,38,59,.72)');
+  grad.addColorStop(1,'#19263b');
+  ctx.fillStyle=grad;ctx.fillRect(0,400,W,600);
+  ctx.fillStyle='#19263b';ctx.fillRect(0,830,W,520);
+  // subtle navy gradient
+  const bg=ctx.createLinearGradient(0,800,0,H);bg.addColorStop(0,'#19263b');bg.addColorStop(1,'#111d31');
+  ctx.fillStyle=bg;ctx.fillRect(0,800,W,550);
+  // Wave motif
+  ctx.save();ctx.globalAlpha=.35;ctx.strokeStyle='#087d9d';ctx.lineWidth=2;
+  for(let j=0;j<18;j++){
+    ctx.beginPath();
+    for(let x=0;x<=520;x+=5){
+      const y=1120+j*7+Math.sin(x/45+j*.22)*30+Math.sin(x/100)*22;
+      if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }ctx.stroke();
+  }
+  for(let j=0;j<13;j++){
+    ctx.beginPath();
+    for(let x=180;x<=620;x+=5){
+      const y=1190+j*8+Math.sin((x-180)/52+j*.2)*55;
+      if(x===180)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }ctx.stroke();
+  }
+  ctx.restore();
+  // Approximate circular 24 mark
+  ctx.save();ctx.strokeStyle='#ffffffb8';ctx.lineWidth=12;ctx.beginPath();ctx.arc(102,102,51,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle='#fff';ctx.font='bold 45px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('24',106,103);
+  ctx.beginPath();ctx.arc(70,99,5,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(70,115,5,0,Math.PI*2);ctx.fill();ctx.restore();
+  // Headline: wrap Arabic, color selected phrase
+  const text=headlineInput.value.trim()||'اكتبي عنوان الخبر هنا';
+  const hi=highlightInput.value.trim();
+  const fontSize=62, maxWidth=900, lineHeight=86;
+  ctx.font=`bold ${fontSize}px Tahoma, Arial, sans-serif`;
+  ctx.textAlign='right';ctx.textBaseline='alphabetic';
+  const words=text.split(/\s+/);let lines=[],line='';
+  for(const word of words){
+    const test=line?line+' '+word:word;
+    if(ctx.measureText(test).width>maxWidth && line){lines.push(line);line=word}else line=test;
+  }
+  if(line)lines.push(line);
+  if(lines.length>3) lines=lines.slice(0,3);
+  const startY=950+(3-lines.length)*42;
+  lines.forEach((ln,i)=>{
+    // paint line in runs, right-to-left, keeping highlighted phrase turquoise
+    let segments=[];
+    if(hi && ln.includes(hi)){
+      const parts=ln.split(hi);
+      for(let k=0;k<parts.length;k++){
+        if(parts[k])segments.push({t:parts[k],c:'#fff'});
+        if(k<parts.length-1)segments.push({t:hi,c:'#67e0eb'});
+      }
+    } else segments=[{t:ln,c:'#fff'}];
+    let x=1000, y=startY+i*lineHeight;
+    for(const seg of segments){
+      const width=ctx.measureText(seg.t).width;
+      ctx.fillStyle=seg.c;ctx.textAlign='right';ctx.fillText(seg.t,x,y);
+      x-=width;
+    }
+  });
+  ctx.fillStyle='#fff';ctx.font='bold 27px Tahoma, Arial, sans-serif';ctx.textAlign='right';ctx.fillText(footerInput.value||'24.ae',1000,1310);
+}
+document.getElementById('download').addEventListener('click',()=>{
+  const a=document.createElement('a');a.download='news-card.png';a.href=canvas.toDataURL('image/png');a.click();
+});
+document.getElementById('reset').addEventListener('click',()=>{
+  headlineInput.value='إنفيديا تعيد جنس هواة إلى قيادتها بدعم من ترامب';
+  highlightInput.value='بدعم';footerInput.value='24.ae';photoInput.value='';photo=null;draw();
+});
+draw();
+</script>
+</body>
+</html>
